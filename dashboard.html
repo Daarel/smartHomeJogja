@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Rumah Sewa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+      <header class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+          Dashboard Pemantauan Rumah Sewa
+        </h1>
+        <p class="text-gray-600">
+          Koneksi MQTT:
+          <span id="mqtt-status" class="font-semibold text-red-500"
+            >Terputus</span
+          >
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-white p-5 rounded-lg shadow">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">
+              Status Hunian
+            </h2>
+            <div
+              id="status-hunian"
+              class="text-center p-4 rounded-md text-white font-bold text-lg bg-gray-400"
+            >
+              ---
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-lg shadow">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Peringatan</h2>
+            <div
+              id="status-peringatan"
+              class="text-center p-4 rounded-md bg-green-100 text-green-800 font-medium"
+            >
+              Aman
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-lg shadow lg:col-span-1">
+          <h2 class="text-xl font-semibold text-gray-700 mb-4">
+            Monitoring Ruangan
+          </h2>
+          <div class="space-y-4">
+            <div>
+              <h3 class="font-semibold text-gray-800">Kamar 1</h3>
+              <p class="text-gray-600">
+                Gerakan:
+                <span id="gerak-k1" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-gray-600">
+                Lampu (LDR):
+                <span id="lampu-k1" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-sm text-gray-600">
+                Relay Lampu:
+                <span id="relay-lampu1" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <div class="flex space-x-2 mt-2">
+                <button
+                  id="btn-l1-on"
+                  onclick="kontrolLampu('1', 'ON')"
+                  class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  Nyalakan
+                </button>
+                <button
+                  id="btn-l1-off"
+                  onclick="kontrolLampu('1', 'OFF')"
+                  class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
+                >
+                  Matikan
+                </button>
+              </div>
+            </div>
+            <hr />
+
+            <div>
+              <h3 class="font-semibold text-gray-800">Kamar 2</h3>
+              <p class="text-gray-600">
+                Gerakan:
+                <span id="gerak-k2" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-gray-600">
+                Lampu (LDR):
+                <span id="lampu-k2" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-sm text-gray-600">
+                Relay Lampu:
+                <span id="relay-lampu2" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <div class="flex space-x-2 mt-2">
+                <button
+                  id="btn-l2-on"
+                  onclick="kontrolLampu('2', 'ON')"
+                  class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  Nyalakan
+                </button>
+                <button
+                  id="btn-l2-off"
+                  onclick="kontrolLampu('2', 'OFF')"
+                  class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
+                >
+                  Matikan
+                </button>
+              </div>
+            </div>
+            <hr />
+
+            <div>
+              <h3 class="font-semibold text-gray-800">Kamar 3</h3>
+              <p class="text-gray-600">
+                Gerakan:
+                <span id="gerak-k3" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-gray-600">
+                Lampu (LDR):
+                <span id="lampu-k3" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-sm text-gray-600">
+                Relay Lampu:
+                <span id="relay-lampu3" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <div class="flex space-x-2 mt-2">
+                <button
+                  id="btn-l3-on"
+                  onclick="kontrolLampu('3', 'ON')"
+                  class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  Nyalakan
+                </button>
+                <button
+                  id="btn-l3-off"
+                  onclick="kontrolLampu('3', 'OFF')"
+                  class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
+                >
+                  Matikan
+                </button>
+              </div>
+            </div>
+            <hr />
+
+            <div>
+              <h3 class="font-semibold text-gray-800">Ruang Tengah</h3>
+              <p class="text-gray-600">
+                Gerakan:
+                <span id="gerak-rt" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-gray-600">
+                Lampu (LDR):
+                <span id="lampu-rt" class="font-medium text-gray-500">---</span>
+              </p>
+              <p class="text-sm text-gray-600">
+                Relay Lampu:
+                <span id="relay-lampuRT" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <div class="flex space-x-2 mt-2">
+                <button
+                  id="btn-lRT-on"
+                  onclick="kontrolLampu('RT', 'ON')"
+                  class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  Nyalakan
+                </button>
+                <button
+                  id="btn-lRT-off"
+                  onclick="kontrolLampu('RT', 'OFF')"
+                  class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
+                >
+                  Matikan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-white p-5 rounded-lg shadow">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">
+              Monitoring Perabotan
+            </h2>
+            <div class="space-y-3">
+              <div>
+                <h3 class="font-semibold text-gray-800">Kulkas</h3>
+                <p class="text-gray-600">
+                  Status:
+                  <span id="status-kulkas" class="font-medium text-gray-500"
+                    >---</span
+                  >
+                </p>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-800">Kompor</h3>
+                <p class="text-gray-600">
+                  Status:
+                  <span id="status-kompor" class="font-medium text-gray-500"
+                    >---</span
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-lg shadow">
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">
+              Kontrol Perabotan
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">
+              Kontrol hanya aktif saat rumah terdeteksi kosong.
+            </p>
+
+            <div class="mb-4">
+              <h3 class="font-semibold text-gray-800">Mesin Cuci</h3>
+              <p class="text-sm text-gray-600">
+                Status:
+                <span id="status-mesincuci" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <p class="text-sm text-gray-600">
+                Relay Pemilik:
+                <span id="relay-mesincuci" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <div class="flex space-x-2 mt-2">
+                <button
+                  id="btn-cuci-on"
+                  onclick="kontrolCuci('ON')"
+                  class="btn-perabot bg-green-500 text-white px-4 py-1 rounded shadow hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  Nyalakan
+                </button>
+                <button
+                  id="btn-cuci-off"
+                  onclick="kontrolCuci('OFF')"
+                  class="btn-perabot bg-red-500 text-white px-4 py-1 rounded shadow hover:bg-red-600 disabled:bg-gray-300"
+                >
+                  Matikan
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-semibold text-gray-800">Pompa Air</h3>
+              <p class="text-sm text-gray-600">
+                Status:
+                <span id="status-pompa" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <p class="text-sm text-gray-600">
+                Relay Pemilik:
+                <span id="relay-pompa" class="font-medium text-gray-500"
+                  >---</span
+                >
+              </p>
+              <div class="flex space-x-2 mt-2">
+                <button
+                  id="btn-pompa-on"
+                  onclick="kontrolPompa('ON')"
+                  class="btn-perabot bg-green-500 text-white px-4 py-1 rounded shadow hover:bg-green-600 disabled:bg-gray-300"
+                >
+                  Nyalakan
+                </button>
+                <button
+                  id="btn-pompa-off"
+                  onclick="kontrolPompa('OFF')"
+                  class="btn-perabot bg-red-500 text-white px-4 py-1 rounded shadow hover:bg-red-600 disabled:bg-gray-300"
+                >
+                  Matikan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- KONFIGURASI MQTT ---
+      const brokerHost = "broker.hivemq.com";
+      const brokerPort = 8884; // Port WebSocket
+      const clientId = "WebApp_" + new Date().getTime();
+
+      // Buat Klien MQTT
+      const client = new Paho.MQTT.Client(brokerHost, brokerPort, clientId);
+
+      // Setel Callback
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
+
+      // Fungsi untuk mem-format ulang elemen
+      function setStatus(elementId, text, styleClass) {
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.textContent = text;
+          el.className = styleClass; // Ganti semua kelas
+        }
+      }
+
+      // Fungsi untuk memperbarui teks
+      function updateText(elementId, text) {
+        const el = document.getElementById(elementId);
+        if (el) el.textContent = text;
+      }
+
+      // Fungsi untuk menonaktifkan/mengaktifkan tombol
+      function setKontrolState(disabled) {
+        // Nonaktifkan tombol Perabotan
+        document
+          .querySelectorAll(".btn-perabot")
+          .forEach((btn) => (btn.disabled = disabled));
+        // Nonaktifkan tombol Lampu
+        document
+          .querySelectorAll(".btn-lampu")
+          .forEach((btn) => (btn.disabled = disabled));
+      }
+      // Nonaktifkan tombol saat pertama kali load
+      setKontrolState(true);
+
+      // Terhubung ke Broker
+      client.connect({
+        onSuccess: onConnect,
+        onFailure: onFailure,
+        useSSL: false,
+      });
+
+      function onFailure(response) {
+        console.log("Koneksi gagal: " + response.errorMessage);
+        setStatus(
+          "mqtt-status",
+          "Gagal: " + response.errorMessage,
+          "font-semibold text-red-500"
+        );
+      }
+
+      // Fungsi saat Terhubung
+      function onConnect() {
+        console.log("Terhubung ke MQTT Broker!");
+        setStatus("mqtt-status", "Terhubung", "font-semibold text-green-600");
+
+        // Berlangganan ke semua topik (wildcard)
+        client.subscribe("rumah/#");
+      }
+
+      // Fungsi saat Koneksi Terputus
+      function onConnectionLost(responseObject) {
+        if (responseObject.errorCode !== 0) {
+          console.log("Koneksi terputus: " + responseObject.errorMessage);
+          setStatus("mqtt-status", "Terputus", "font-semibold text-red-500");
+        }
+      }
+
+      // Fungsi utama saat Pesan Diterima
+      function onMessageArrived(message) {
+        const topic = message.destinationName;
+        const payload = message.payloadString;
+
+        // 1. Status Hunian
+        if (topic === "rumah/status/hunian") {
+          if (payload === "BERPENGHUNI") {
+            setStatus(
+              "status-hunian",
+              "BERPENGHUNI",
+              "text-center p-4 rounded-md text-white font-bold text-lg bg-green-500"
+            );
+            setKontrolState(true); // Non-aktifkan SEMUA tombol
+          } else {
+            // (payload === "KOSONG")
+            setStatus(
+              "status-hunian",
+              "KOSONG",
+              "text-center p-4 rounded-md text-white font-bold text-lg bg-yellow-500"
+            );
+            setKontrolState(false); // Aktifkan SEMUA tombol
+          }
+        }
+
+        // 2. Peringatan
+        else if (topic === "rumah/status/peringatan") {
+          if (payload === "Aman") {
+            setStatus(
+              "status-peringatan",
+              "Aman",
+              "text-center p-4 rounded-md bg-green-100 text-green-800 font-medium"
+            );
+          } else {
+            setStatus(
+              "status-peringatan",
+              payload,
+              "text-center p-4 rounded-md bg-red-100 text-red-800 font-bold animate-pulse"
+            );
+          }
+        }
+
+        // 3. Monitoring Ruangan - Lampu (LDR)
+        else if (topic === "rumah/kamar1/lampu")
+          updateText("lampu-k1", payload);
+        else if (topic === "rumah/kamar2/lampu")
+          updateText("lampu-k2", payload);
+        else if (topic === "rumah/kamar3/lampu")
+          updateText("lampu-k3", payload);
+        else if (topic === "rumah/rtengah/lampu")
+          updateText("lampu-rt", payload);
+        // 4. Monitoring Ruangan - Gerakan (Dikontrol Firmware)
+        else if (topic === "rumah/kamar1/gerak")
+          updateText("gerak-k1", payload);
+        else if (topic === "rumah/kamar2/gerak")
+          updateText("gerak-k2", payload);
+        else if (topic === "rumah/kamar3/gerak")
+          updateText("gerak-k3", payload);
+        else if (topic === "rumah/rtengah/gerak")
+          updateText("gerak-rt", payload);
+        // 5. Monitoring Perabotan (Kulkas & Kompor)
+        else if (topic === "rumah/perabotan/kulkas/status")
+          updateText("status-kulkas", payload);
+        else if (topic === "rumah/perabotan/kompor/status")
+          updateText("status-kompor", payload);
+        // 6. Kontrol Perabotan (Mesin Cuci & Pompa)
+        else if (topic === "rumah/perabotan/mesincuci/status")
+          updateText("status-mesincuci", payload);
+        else if (topic === "rumah/perabotan/pompa/status")
+          updateText("status-pompa", payload);
+        else if (topic === "rumah/perabotan/mesincuci/relay")
+          updateText("relay-mesincuci", payload);
+        else if (topic === "rumah/perabotan/pompa/relay")
+          updateText("relay-pompa", payload);
+        // 7. Kontrol Lampu (BARU)
+        else if (topic === "rumah/lampu/relay1")
+          updateText("relay-lampu1", payload);
+        else if (topic === "rumah/lampu/relay2")
+          updateText("relay-lampu2", payload);
+        else if (topic === "rumah/lampu/relay3")
+          updateText("relay-lampu3", payload);
+        else if (topic === "rumah/lampu/relayRT")
+          updateText("relay-lampuRT", payload);
+      }
+
+      // Fungsi untuk Mengirim Perintah Kontrol
+      function kontrolCuci(perintah) {
+        console.log("Mengirim perintah Mesin Cuci: " + perintah);
+        var message = new Paho.MQTT.Message(perintah);
+        message.destinationName = "rumah/kontrol/mesincuci";
+        client.send(message);
+      }
+
+      function kontrolPompa(perintah) {
+        console.log("Mengirim perintah Pompa: " + perintah);
+        var message = new Paho.MQTT.Message(perintah);
+        message.destinationName = "rumah/kontrol/pompa";
+        client.send(message);
+      }
+
+      function kontrolLampu(nomorLampu, perintah) {
+        console.log("Mengirim perintah Lampu " + nomorLampu + ": " + perintah);
+        var message = new Paho.MQTT.Message(perintah);
+        message.destinationName = "rumah/kontrol/lampu" + nomorLampu;
+        client.send(message);
+      }
+    </script>
+  </body>
+</html>
