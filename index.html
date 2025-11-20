@@ -302,12 +302,18 @@
 
     <script>
       // --- KONFIGURASI MQTT ---
-      const brokerHost = "broker.hivemq.com";
-      const brokerPort = 8884; // Port WebSocket
       const clientId = "WebApp_" + new Date().getTime();
 
-      // Buat Klien MQTT
-      const client = new Paho.MQTT.Client(brokerHost, brokerPort, clientId);
+      const client = new Paho.MQTT.Client(
+        "wss://broker.hivemq.com:8884/mqtt",
+        clientId
+      );
+
+      client.connect({
+        onSuccess: onConnect,
+        onFailure: onFailure,
+        useSSL: true,
+      });
 
       // Setel Callback
       client.onConnectionLost = onConnectionLost;
@@ -346,7 +352,7 @@
       client.connect({
         onSuccess: onConnect,
         onFailure: onFailure,
-        useSSL: false,
+        useSSL: true,        // HARUS true
       });
 
       function onFailure(response) {
