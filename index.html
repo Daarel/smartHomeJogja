@@ -322,7 +322,7 @@
       const clientId = "WebApp_" + new Date().getTime();
       const client = new Paho.MQTT.Client(
         "wss://broker.hivemq.com:8884/mqtt",
-        clientId
+        clientId 
       );
 
       client.connect({
