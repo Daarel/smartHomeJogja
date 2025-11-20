@@ -74,14 +74,12 @@
               </p>
               <div class="flex space-x-2 mt-2">
                 <button
-                  id="btn-l1-on"
                   onclick="kontrolLampu('1', 'ON')"
                   class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
                 >
                   Nyalakan
                 </button>
                 <button
-                  id="btn-l1-off"
                   onclick="kontrolLampu('1', 'OFF')"
                   class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
                 >
@@ -90,7 +88,6 @@
               </div>
             </div>
             <hr />
-
             <div>
               <h3 class="font-semibold text-gray-800">Kamar 2</h3>
               <p class="text-gray-600">
@@ -109,14 +106,12 @@
               </p>
               <div class="flex space-x-2 mt-2">
                 <button
-                  id="btn-l2-on"
                   onclick="kontrolLampu('2', 'ON')"
                   class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
                 >
                   Nyalakan
                 </button>
                 <button
-                  id="btn-l2-off"
                   onclick="kontrolLampu('2', 'OFF')"
                   class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
                 >
@@ -125,7 +120,6 @@
               </div>
             </div>
             <hr />
-
             <div>
               <h3 class="font-semibold text-gray-800">Kamar 3</h3>
               <p class="text-gray-600">
@@ -144,14 +138,12 @@
               </p>
               <div class="flex space-x-2 mt-2">
                 <button
-                  id="btn-l3-on"
                   onclick="kontrolLampu('3', 'ON')"
                   class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
                 >
                   Nyalakan
                 </button>
                 <button
-                  id="btn-l3-off"
                   onclick="kontrolLampu('3', 'OFF')"
                   class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
                 >
@@ -160,7 +152,6 @@
               </div>
             </div>
             <hr />
-
             <div>
               <h3 class="font-semibold text-gray-800">Ruang Tengah</h3>
               <p class="text-gray-600">
@@ -179,14 +170,12 @@
               </p>
               <div class="flex space-x-2 mt-2">
                 <button
-                  id="btn-lRT-on"
                   onclick="kontrolLampu('RT', 'ON')"
                   class="btn-lampu bg-green-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-600 disabled:bg-gray-300"
                 >
                   Nyalakan
                 </button>
                 <button
-                  id="btn-lRT-off"
                   onclick="kontrolLampu('RT', 'OFF')"
                   class="btn-lampu bg-red-500 text-white px-3 py-1 rounded shadow text-sm hover:bg-red-600 disabled:bg-gray-300"
                 >
@@ -248,14 +237,12 @@
               </p>
               <div class="flex space-x-2 mt-2">
                 <button
-                  id="btn-cuci-on"
                   onclick="kontrolCuci('ON')"
                   class="btn-perabot bg-green-500 text-white px-4 py-1 rounded shadow hover:bg-green-600 disabled:bg-gray-300"
                 >
                   Nyalakan
                 </button>
                 <button
-                  id="btn-cuci-off"
                   onclick="kontrolCuci('OFF')"
                   class="btn-perabot bg-red-500 text-white px-4 py-1 rounded shadow hover:bg-red-600 disabled:bg-gray-300"
                 >
@@ -280,14 +267,12 @@
               </p>
               <div class="flex space-x-2 mt-2">
                 <button
-                  id="btn-pompa-on"
                   onclick="kontrolPompa('ON')"
                   class="btn-perabot bg-green-500 text-white px-4 py-1 rounded shadow hover:bg-green-600 disabled:bg-gray-300"
                 >
                   Nyalakan
                 </button>
                 <button
-                  id="btn-pompa-off"
                   onclick="kontrolPompa('OFF')"
                   class="btn-perabot bg-red-500 text-white px-4 py-1 rounded shadow hover:bg-red-600 disabled:bg-gray-300"
                 >
@@ -301,9 +286,40 @@
     </div>
 
     <script>
+      // --- LOGIKA PERINGATAN BARU ---
+      // Objek ini akan menyimpan status peringatan per ruangan
+      const listPeringatan = {
+        kamar1: "",
+        kamar2: "",
+        kamar3: "",
+        rtengah: "",
+      };
+
+      // Fungsi untuk merender ulang kotak peringatan
+      function renderPeringatan() {
+        // Ambil semua pesan yang tidak kosong
+        const pesanAktif = Object.values(listPeringatan).filter(
+          (msg) => msg !== "" && msg !== "Aman"
+        );
+
+        const elStatus = document.getElementById("status-peringatan");
+
+        if (pesanAktif.length === 0) {
+          // Jika tidak ada peringatan sama sekali
+          elStatus.innerHTML = "Aman";
+          elStatus.className =
+            "text-center p-4 rounded-md bg-green-100 text-green-800 font-medium";
+        } else {
+          // Jika ada peringatan, gabungkan dengan <br> atau ;
+          // Contoh output: "Lampu K1 Nyala; Lampu RT Nyala;"
+          elStatus.innerHTML = pesanAktif.join("<br>");
+          elStatus.className =
+            "text-center p-4 rounded-md bg-red-100 text-red-800 font-bold animate-pulse";
+        }
+      }
+
       // --- KONFIGURASI MQTT ---
       const clientId = "WebApp_" + new Date().getTime();
-
       const client = new Paho.MQTT.Client(
         "wss://broker.hivemq.com:8884/mqtt",
         clientId
@@ -315,115 +331,92 @@
         useSSL: true,
       });
 
-      // Setel Callback
       client.onConnectionLost = onConnectionLost;
       client.onMessageArrived = onMessageArrived;
 
-      // Fungsi untuk mem-format ulang elemen
       function setStatus(elementId, text, styleClass) {
         const el = document.getElementById(elementId);
         if (el) {
-          el.textContent = text;
-          el.className = styleClass; // Ganti semua kelas
+          el.innerHTML = text;
+          el.className = styleClass;
         }
       }
 
-      // Fungsi untuk memperbarui teks
       function updateText(elementId, text) {
         const el = document.getElementById(elementId);
         if (el) el.textContent = text;
       }
 
-      // Fungsi untuk menonaktifkan/mengaktifkan tombol
       function setKontrolState(disabled) {
-        // Nonaktifkan tombol Perabotan
         document
           .querySelectorAll(".btn-perabot")
           .forEach((btn) => (btn.disabled = disabled));
-        // Nonaktifkan tombol Lampu
         document
           .querySelectorAll(".btn-lampu")
           .forEach((btn) => (btn.disabled = disabled));
       }
-      // Nonaktifkan tombol saat pertama kali load
       setKontrolState(true);
-
-      // Terhubung ke Broker
-      client.connect({
-        onSuccess: onConnect,
-        onFailure: onFailure,
-        useSSL: true,        // HARUS true
-      });
 
       function onFailure(response) {
         console.log("Koneksi gagal: " + response.errorMessage);
-        setStatus(
-          "mqtt-status",
-          "Gagal: " + response.errorMessage,
-          "font-semibold text-red-500"
-        );
+        setStatus("mqtt-status", "Gagal", "font-semibold text-red-500");
       }
 
-      // Fungsi saat Terhubung
       function onConnect() {
         console.log("Terhubung ke MQTT Broker!");
         setStatus("mqtt-status", "Terhubung", "font-semibold text-green-600");
-
-        // Berlangganan ke semua topik (wildcard)
         client.subscribe("rumah/#");
       }
 
-      // Fungsi saat Koneksi Terputus
       function onConnectionLost(responseObject) {
         if (responseObject.errorCode !== 0) {
-          console.log("Koneksi terputus: " + responseObject.errorMessage);
           setStatus("mqtt-status", "Terputus", "font-semibold text-red-500");
         }
       }
 
-      // Fungsi utama saat Pesan Diterima
+      // --- FUNGSI UTAMA PESAN DITERIMA ---
       function onMessageArrived(message) {
         const topic = message.destinationName;
         const payload = message.payloadString;
 
-        // 1. Status Hunian
-        if (topic === "rumah/status/hunian") {
+        // --- LOGIKA PERINGATAN UPDATE ---
+        // Kita cek topik spesifik per kamar
+        if (topic === "rumah/kamar1/peringatan") {
+          listPeringatan.kamar1 = payload === "Aman" ? "" : payload;
+          renderPeringatan();
+        } else if (topic === "rumah/kamar2/peringatan") {
+          listPeringatan.kamar2 = payload === "Aman" ? "" : payload;
+          renderPeringatan();
+        } else if (topic === "rumah/kamar3/peringatan") {
+          listPeringatan.kamar3 = payload === "Aman" ? "" : payload;
+          renderPeringatan();
+        } else if (topic === "rumah/rtengah/peringatan") {
+          listPeringatan.rtengah = payload === "Aman" ? "" : payload;
+          renderPeringatan();
+        }
+
+        // --- LOGIKA LAINNYA (Sama seperti sebelumnya) ---
+
+        // Status Hunian
+        else if (topic === "rumah/status/hunian") {
           if (payload === "BERPENGHUNI") {
             setStatus(
               "status-hunian",
               "BERPENGHUNI",
               "text-center p-4 rounded-md text-white font-bold text-lg bg-green-500"
             );
-            setKontrolState(true); // Non-aktifkan SEMUA tombol
+            setKontrolState(true);
           } else {
-            // (payload === "KOSONG")
             setStatus(
               "status-hunian",
               "KOSONG",
               "text-center p-4 rounded-md text-white font-bold text-lg bg-yellow-500"
             );
-            setKontrolState(false); // Aktifkan SEMUA tombol
+            setKontrolState(false);
           }
         }
 
-        // 2. Peringatan
-        else if (topic === "rumah/status/peringatan") {
-          if (payload === "Aman") {
-            setStatus(
-              "status-peringatan",
-              "Aman",
-              "text-center p-4 rounded-md bg-green-100 text-green-800 font-medium"
-            );
-          } else {
-            setStatus(
-              "status-peringatan",
-              payload,
-              "text-center p-4 rounded-md bg-red-100 text-red-800 font-bold animate-pulse"
-            );
-          }
-        }
-
-        // 3. Monitoring Ruangan - Lampu (LDR)
+        // Monitoring Ruangan & Perabotan
         else if (topic === "rumah/kamar1/lampu")
           updateText("lampu-k1", payload);
         else if (topic === "rumah/kamar2/lampu")
@@ -432,7 +425,6 @@
           updateText("lampu-k3", payload);
         else if (topic === "rumah/rtengah/lampu")
           updateText("lampu-rt", payload);
-        // 4. Monitoring Ruangan - Gerakan (Dikontrol Firmware)
         else if (topic === "rumah/kamar1/gerak")
           updateText("gerak-k1", payload);
         else if (topic === "rumah/kamar2/gerak")
@@ -441,12 +433,10 @@
           updateText("gerak-k3", payload);
         else if (topic === "rumah/rtengah/gerak")
           updateText("gerak-rt", payload);
-        // 5. Monitoring Perabotan (Kulkas & Kompor)
         else if (topic === "rumah/perabotan/kulkas/status")
           updateText("status-kulkas", payload);
         else if (topic === "rumah/perabotan/kompor/status")
           updateText("status-kompor", payload);
-        // 6. Kontrol Perabotan (Mesin Cuci & Pompa)
         else if (topic === "rumah/perabotan/mesincuci/status")
           updateText("status-mesincuci", payload);
         else if (topic === "rumah/perabotan/pompa/status")
@@ -455,7 +445,6 @@
           updateText("relay-mesincuci", payload);
         else if (topic === "rumah/perabotan/pompa/relay")
           updateText("relay-pompa", payload);
-        // 7. Kontrol Lampu (BARU)
         else if (topic === "rumah/lampu/relay1")
           updateText("relay-lampu1", payload);
         else if (topic === "rumah/lampu/relay2")
@@ -466,25 +455,20 @@
           updateText("relay-lampuRT", payload);
       }
 
-      // Fungsi untuk Mengirim Perintah Kontrol
-      function kontrolCuci(perintah) {
-        console.log("Mengirim perintah Mesin Cuci: " + perintah);
-        var message = new Paho.MQTT.Message(perintah);
-        message.destinationName = "rumah/kontrol/mesincuci";
-        client.send(message);
+      // Fungsi Kontrol MQTT
+      function kontrolCuci(cmd) {
+        sendMqtt("rumah/kontrol/mesincuci", cmd);
+      }
+      function kontrolPompa(cmd) {
+        sendMqtt("rumah/kontrol/pompa", cmd);
+      }
+      function kontrolLampu(id, cmd) {
+        sendMqtt("rumah/kontrol/lampu" + id, cmd);
       }
 
-      function kontrolPompa(perintah) {
-        console.log("Mengirim perintah Pompa: " + perintah);
-        var message = new Paho.MQTT.Message(perintah);
-        message.destinationName = "rumah/kontrol/pompa";
-        client.send(message);
-      }
-
-      function kontrolLampu(nomorLampu, perintah) {
-        console.log("Mengirim perintah Lampu " + nomorLampu + ": " + perintah);
-        var message = new Paho.MQTT.Message(perintah);
-        message.destinationName = "rumah/kontrol/lampu" + nomorLampu;
+      function sendMqtt(topic, msg) {
+        var message = new Paho.MQTT.Message(msg);
+        message.destinationName = topic;
         client.send(message);
       }
     </script>
