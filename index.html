@@ -286,8 +286,44 @@
     </div>
 
     <script>
-      // --- LOGIKA PERINGATAN BARU ---
-      // Objek ini akan menyimpan status peringatan per ruangan
+      // --- LOGIKA BARU: AGREGATOR STATUS HUNIAN ---
+      // Kita simpan status gerakan per ruangan di sini
+      const statusGerak = {
+        kamar1: false,
+        kamar2: false,
+        kamar3: false,
+        rtengah: false,
+      };
+
+      // Fungsi Wasit: Cek apakah ADA SALAH SATU yang mendeteksi gerak
+      function updateStatusHunian() {
+        // Cek apakah ada minimal satu ruangan yang true
+        const adaOrang = Object.values(statusGerak).some(
+          (status) => status === true
+        );
+
+        const elStatus = document.getElementById("status-hunian");
+
+        if (adaOrang) {
+          // Jika minimal 1 kamar mendeteksi gerakan
+          setStatus(
+            "status-hunian",
+            "BERPENGHUNI",
+            "text-center p-4 rounded-md text-white font-bold text-lg bg-green-500"
+          );
+          setKontrolState(true); // Disable tombol (Aman)
+        } else {
+          // Jika SEMUA kamar false (tidak ada gerakan)
+          setStatus(
+            "status-hunian",
+            "KOSONG",
+            "text-center p-4 rounded-md text-white font-bold text-lg bg-yellow-500"
+          );
+          setKontrolState(false); // Enable tombol
+        }
+      }
+
+      // --- LOGIKA PERINGATAN (YANG SUDAH DIPERBAIKI SEBELUMNYA) ---
       const listPeringatan = {
         kamar1: "",
         kamar2: "",
@@ -295,23 +331,17 @@
         rtengah: "",
       };
 
-      // Fungsi untuk merender ulang kotak peringatan
       function renderPeringatan() {
-        // Ambil semua pesan yang tidak kosong
         const pesanAktif = Object.values(listPeringatan).filter(
           (msg) => msg !== "" && msg !== "Aman"
         );
-
         const elStatus = document.getElementById("status-peringatan");
 
         if (pesanAktif.length === 0) {
-          // Jika tidak ada peringatan sama sekali
           elStatus.innerHTML = "Aman";
           elStatus.className =
             "text-center p-4 rounded-md bg-green-100 text-green-800 font-medium";
         } else {
-          // Jika ada peringatan, gabungkan dengan <br> atau ;
-          // Contoh output: "Lampu K1 Nyala; Lampu RT Nyala;"
           elStatus.innerHTML = pesanAktif.join("<br>");
           elStatus.className =
             "text-center p-4 rounded-md bg-red-100 text-red-800 font-bold animate-pulse";
@@ -322,7 +352,7 @@
       const clientId = "WebApp_" + new Date().getTime();
       const client = new Paho.MQTT.Client(
         "wss://broker.hivemq.com:8884/mqtt",
-        clientId 
+        clientId
       );
 
       client.connect({
@@ -330,7 +360,6 @@
         onFailure: onFailure,
         useSSL: true,
       });
-
       client.onConnectionLost = onConnectionLost;
       client.onMessageArrived = onMessageArrived;
 
@@ -355,7 +384,7 @@
           .querySelectorAll(".btn-lampu")
           .forEach((btn) => (btn.disabled = disabled));
       }
-      setKontrolState(true);
+      setKontrolState(true); // Default disable
 
       function onFailure(response) {
         console.log("Koneksi gagal: " + response.errorMessage);
@@ -363,25 +392,42 @@
       }
 
       function onConnect() {
-        console.log("Terhubung ke MQTT Broker!");
+        console.log("Terhubung!");
         setStatus("mqtt-status", "Terhubung", "font-semibold text-green-600");
         client.subscribe("rumah/#");
       }
 
       function onConnectionLost(responseObject) {
-        if (responseObject.errorCode !== 0) {
+        if (responseObject.errorCode !== 0)
           setStatus("mqtt-status", "Terputus", "font-semibold text-red-500");
-        }
       }
 
-      // --- FUNGSI UTAMA PESAN DITERIMA ---
+      // --- FUNGSI UTAMA TERIMA PESAN ---
       function onMessageArrived(message) {
         const topic = message.destinationName;
         const payload = message.payloadString;
 
-        // --- LOGIKA PERINGATAN UPDATE ---
-        // Kita cek topik spesifik per kamar
-        if (topic === "rumah/kamar1/peringatan") {
+        // 1. LOGIKA GERAKAN (Update statusGerak per kamar)
+        if (topic === "rumah/kamar1/gerak") {
+          updateText("gerak-k1", payload);
+          statusGerak.kamar1 = payload === "GERAKAN";
+          updateStatusHunian(); // Panggil wasit
+        } else if (topic === "rumah/kamar2/gerak") {
+          updateText("gerak-k2", payload);
+          statusGerak.kamar2 = payload === "GERAKAN";
+          updateStatusHunian(); // Panggil wasit
+        } else if (topic === "rumah/kamar3/gerak") {
+          updateText("gerak-k3", payload);
+          statusGerak.kamar3 = payload === "GERAKAN";
+          updateStatusHunian(); // Panggil wasit
+        } else if (topic === "rumah/rtengah/gerak") {
+          updateText("gerak-rt", payload);
+          statusGerak.rtengah = payload === "GERAKAN";
+          updateStatusHunian(); // Panggil wasit
+        }
+
+        // 2. LOGIKA PERINGATAN
+        else if (topic === "rumah/kamar1/peringatan") {
           listPeringatan.kamar1 = payload === "Aman" ? "" : payload;
           renderPeringatan();
         } else if (topic === "rumah/kamar2/peringatan") {
@@ -395,28 +441,8 @@
           renderPeringatan();
         }
 
-        // --- LOGIKA LAINNYA (Sama seperti sebelumnya) ---
-
-        // Status Hunian
-        else if (topic === "rumah/status/hunian") {
-          if (payload === "BERPENGHUNI") {
-            setStatus(
-              "status-hunian",
-              "BERPENGHUNI",
-              "text-center p-4 rounded-md text-white font-bold text-lg bg-green-500"
-            );
-            setKontrolState(true);
-          } else {
-            setStatus(
-              "status-hunian",
-              "KOSONG",
-              "text-center p-4 rounded-md text-white font-bold text-lg bg-yellow-500"
-            );
-            setKontrolState(false);
-          }
-        }
-
-        // Monitoring Ruangan & Perabotan
+        // 3. LOGIKA LAINNYA (Lampu & Perabotan)
+        // Note: Kita HAPUS blok "rumah/status/hunian" dari sini karena sekarang Dashboard yang hitung sendiri
         else if (topic === "rumah/kamar1/lampu")
           updateText("lampu-k1", payload);
         else if (topic === "rumah/kamar2/lampu")
@@ -425,14 +451,6 @@
           updateText("lampu-k3", payload);
         else if (topic === "rumah/rtengah/lampu")
           updateText("lampu-rt", payload);
-        else if (topic === "rumah/kamar1/gerak")
-          updateText("gerak-k1", payload);
-        else if (topic === "rumah/kamar2/gerak")
-          updateText("gerak-k2", payload);
-        else if (topic === "rumah/kamar3/gerak")
-          updateText("gerak-k3", payload);
-        else if (topic === "rumah/rtengah/gerak")
-          updateText("gerak-rt", payload);
         else if (topic === "rumah/perabotan/kulkas/status")
           updateText("status-kulkas", payload);
         else if (topic === "rumah/perabotan/kompor/status")
@@ -455,7 +473,7 @@
           updateText("relay-lampuRT", payload);
       }
 
-      // Fungsi Kontrol MQTT
+      // Fungsi Kontrol
       function kontrolCuci(cmd) {
         sendMqtt("rumah/kontrol/mesincuci", cmd);
       }
